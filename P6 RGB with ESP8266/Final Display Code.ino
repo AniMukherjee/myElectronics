@@ -43,8 +43,9 @@ char* password = "Ani@1149";
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 19800, 60000);
 
-char daysOfTheWeek[7][10] = {"sun", "mon", "tue", "wed", "thu", "fri", "sat"};
-char monthsOfTheYear[12][4] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+char daysOfTheWeek1[7][10] = {"sun", "mon", "tue", "wed", "thu", "fri", "sat"};
+char daysOfTheWeek[7][10] = {"Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"};
+char monthsOfTheYear[12][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 String serverPath = "http://api.openweathermap.org/data/2.5/weather?q=Bangalore,IN&units=metric&appid=2bd5e1467bf0c19ef4f39ca5b0c9b08e";
 
 String bigNews[5] = {
@@ -59,6 +60,8 @@ String gold22 = "http://api.thingspeak.com/apps/thinghttp/send_request?api_key=0
 String gold24 = "http://api.thingspeak.com/apps/thinghttp/send_request?api_key=GHOMWIDAA26T68XN";
 
 String bse = "http://api.thingspeak.com/apps/thinghttp/send_request?api_key=ZDV758E6VQSKQNNY";
+
+String currconv = "http://api.thingspeak.com/apps/thinghttp/send_request?api_key=MPNTOVNCOA2YD3WI";
 
 String jsonBuffer;
 
@@ -174,7 +177,7 @@ void draw_weather_icon (uint8_t icon)
       uint16_t byte_pos = (xx + icon * 10) * 2 + yy * 220;
       this_single_double.two[1] = weather_icons[byte_pos];
       this_single_double.two[0] = weather_icons[byte_pos + 1];
-      display.drawPixel(xx + 21, yy + 21, this_single_double.one);
+      display.drawPixel(xx + 1, yy + 19, this_single_double.one);
     }
   }
 }
@@ -247,7 +250,7 @@ void scroll_horizontal(uint8_t ypos, unsigned long scroll_delay, String text, ui
       delay(scroll_delay);
       yield();
 
-      delay(scroll_delay / 5);
+      delay(scroll_delay / 25);
       yield();
     }
     display.fillRect(0, 14, 32, 18, display.color565(0, 0, 0));
@@ -291,46 +294,57 @@ void loop()
     }
     
     display.setFont(&Picopixel);
+    display.setTextColor(display.color565(0, 180, 255));
+    display.setCursor(0, 12);
     if (day(unix_epoch) >= 10)
-      display.setCursor(1, 12);
+    {
+      display.print(String(day(unix_epoch)));
+    }  
     else
-      display.setCursor(4, 12);
-    display.setTextColor(display.color565(225, 235, 10));
-    display.print(String(day(unix_epoch)));
-    display.setCursor(10, 12);
+    {
+      display.print("0" + String(day(unix_epoch)));
+    }
+    
+    display.setCursor(9, 12);
     display.setTextColor(display.color565(50, 25, 145));
     display.print(monthsOfTheYear[month(unix_epoch) - 1]);
-    display.setCursor(25, 12);
-    display.setTextColor(display.color565(225, 30, 105));
-    display.print(String(year(unix_epoch)).substring(2));
+    //display.setCursor(25, 12);
+    //display.setTextColor(display.color565(225, 30, 105));
+    //display.print(String(year(unix_epoch)).substring(2));
+
+    display.setCursor(23, 12);
+    display.setTextColor(display.color565(225, 235, 10));
+    if (timeClient.getDay() == 0)
+      display.setTextColor(display.color565(250, 10, 5));
+    display.print(daysOfTheWeek[timeClient.getDay()]);
 
     if (WiFi.status() == WL_CONNECTED)
     {
       jsonBuffer = httpGETRequest(bigNews[timeClient.getMinutes() % 5].c_str());
       Serial.println("NEWS = " + jsonBuffer);
-      scroll_horizontal(23, 20, jsonBuffer, 50, 25, 145);
+      scroll_horizontal(23, 18, jsonBuffer, 0, 180, 255);
     }
 
     if (WiFi.status() == WL_CONNECTED)
     {
       jsonBuffer = httpGETRequest(gold22.c_str());
-      if (jsonBuffer.length() > 8)
+      if (jsonBuffer.length() > 8 && jsonBuffer.length() < 16)
       {
-        Serial.println("Gold Price in Kolkata for 22 Karat / 10 gms = " + jsonBuffer);
+        Serial.println("Gold Price in Bangalore for 22 Carat / 1 gm = " + jsonBuffer);
         display.setCursor(2, 19);
         display.setTextColor(display.color565(50, 255, 0));
         display.print("22K GOLD");
       
-        display.setTextColor(display.color565(225, 125, 50));
+        display.setTextColor(display.color565(255, 153, 51));
         display.setCursor(6, 28);
         display.print(jsonBuffer);
-        display.drawLine(2, 23, 6, 23, display.color565(255, 153, 51)); // rupee up line
-        display.drawLine(2, 25, 6, 25, display.color565(255, 153, 51)); // rupee mid line
-        display.drawLine(2, 28, 5, 31, display.color565(19, 136, 8)); // rupee bottom strike
-        display.drawLine(3, 23, 5, 25, display.color565(255, 153, 51)); // rupee in betweek 2 up lines
-        display.drawLine(5, 26, 3, 28, display.color565(255, 255, 255)); // rupee in between middle line and bottom strike
+        display.drawLine(3, 23, 7, 23, display.color565(255, 153, 51)); // rupee up line
+        display.drawLine(3, 25, 7, 25, display.color565(255, 153, 51)); // rupee mid line
+        display.drawLine(3, 27, 6, 30, display.color565(19, 136, 8)); // rupee bottom strike
+        display.drawLine(4, 23, 6, 25, display.color565(255, 153, 51)); // rupee in betweek 2 up lines
+        display.drawLine(6, 26, 4, 27, display.color565(255, 255, 255)); // rupee in between middle line and bottom strike
 
-        for (int i = 0; i <= 8; i++)
+        for (int i = 0; i <= 6; i++)
         {
           display.drawRect(15, 1, 2, 2, display.color565(255, 255, 255));
           display.drawRect(15, 4, 2, 2, display.color565(255, 255, 255));
@@ -354,11 +368,11 @@ void loop()
         display.setTextColor(display.color565(50, 255, 0));
         display.print("SENSEX");
         
-        display.setTextColor(display.color565(225, 125, 50));
+        display.setTextColor(display.color565(0, 180, 255));
         display.setCursor(2, 28);
         display.print(jsonBuffer);
   
-        for (int i = 0; i <= 8; i++)
+        for (int i = 0; i <= 6; i++)
         {
           display.drawRect(15, 1, 2, 2, display.color565(255, 255, 255));
           display.drawRect(15, 4, 2, 2, display.color565(255, 255, 255));
@@ -372,15 +386,51 @@ void loop()
       }
     }
 
-    display.setCursor(21, 18);
-    display.setTextColor(display.color565(50, 255, 0));
-    if (timeClient.getDay() == 0)
-      display.setTextColor(display.color565(250, 10, 5));
-    if (timeClient.getDay() == 1 or timeClient.getDay() == 3)
-      display.setCursor(19, 18);
-    if (timeClient.getDay() == 5)
-      display.setCursor(23, 18);
-    display.print(daysOfTheWeek[timeClient.getDay()]);
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      jsonBuffer = httpGETRequest(currconv.c_str());
+      if (jsonBuffer.length() > 4 && jsonBuffer.length() < 10)
+      {
+        Serial.println("USD to INR convert rate = " + jsonBuffer);
+        display.setCursor(0, 20);
+        display.setTextColor(display.color565(50, 255, 0));
+        display.print("CURRENCY");
+        
+        display.setTextColor(display.color565(225, 235, 10));
+        display.setFont();
+        display.setCursor(0, 23);
+        display.print("S");
+        display.drawLine(2, 22, 2, 30, display.color565(191, 10, 48));
+        display.setFont(&Picopixel);
+        display.setCursor(6, 28);
+        display.print("1");
+        display.drawLine(13, 23, 17, 23, display.color565(255, 153, 51)); // rupee up line
+        display.drawLine(13, 25, 17, 25, display.color565(255, 153, 51)); // rupee mid line
+        display.drawLine(13, 27, 16, 30, display.color565(19, 136, 8)); // rupee bottom strike
+        display.drawLine(14, 23, 16, 25, display.color565(255, 153, 51)); // rupee in betweek 2 up lines
+        display.drawLine(16, 26, 14, 27, display.color565(255, 255, 255)); // rupee in between middle line and bottom strike
+
+        display.setTextColor(display.color565(186, 60, 6));
+        display.setCursor(9, 28);
+        display.print("=");
+
+        display.setTextColor(display.color565(255, 153, 51));
+        display.setCursor(19, 28);
+        display.print(jsonBuffer.substring(0, 4));
+  
+        for (int i = 0; i <= 6; i++)
+        {
+          display.drawRect(15, 1, 2, 2, display.color565(255, 255, 255));
+          display.drawRect(15, 4, 2, 2, display.color565(255, 255, 255));
+          delay(500);
+          display.drawRect(15, 1, 2, 2, display.color565(0, 0, 0));
+          display.drawRect(15, 4, 2, 2, display.color565(0, 0, 0));
+          delay(500);
+        }
+        
+        display.fillRect(0, 14, 32, 18, display.color565(0, 0, 0));
+      }
+    }
     
     if (WiFi.status() == WL_CONNECTED)
     {
@@ -409,17 +459,17 @@ void loop()
     display.setTextColor(display.color565(225, 125, 50));
     if (temp != "na")
     {
-      display.setCursor(2, 20);
-      display.print(temp);
-      display.setCursor(10, 17);
-      display.print("o");
       display.setCursor(14, 20);
+      display.print(temp);
+      display.setCursor(22, 17);
+      display.print("o");
+      display.setCursor(26, 20);
       display.print("C");
     }
     else
     {
-      display.setCursor(6, 20);
-      display.print("It's");
+      display.setCursor(11, 20);
+      display.print("it's");
     }
 
     
@@ -427,26 +477,26 @@ void loop()
     {
       if (humm == 100)
       {
-        display.setCursor(1, 28);
+        display.setCursor(13, 28);
         display.print(String(humm));
         display.setFont();
-        display.setCursor(12, 23);
+        display.setCursor(24, 23);
         display.print("%");
         display.setFont(&Picopixel);
       }
       else
       {
-        display.setCursor(2, 28);
+        display.setCursor(14, 28);
         display.print(String(humm));
         display.setFont();
-        display.setCursor(12, 23);
+        display.setCursor(24, 23);
         display.print("%");
         display.setFont(&Picopixel);
       }
     }
     else
     {
-      display.setCursor(0, 28);
+      display.setCursor(11, 28);
       display.print("frozen");
       display.setFont(&Picopixel);
     }
