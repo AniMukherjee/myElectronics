@@ -63,6 +63,8 @@ String bse = "http://api.thingspeak.com/apps/thinghttp/send_request?api_key=ZDV7
 
 String currconv = "http://api.thingspeak.com/apps/thinghttp/send_request?api_key=MPNTOVNCOA2YD3WI";
 
+String quote = "http://api.thingspeak.com/apps/thinghttp/send_request?api_key=EG7AJ670J6C7IXYL";
+
 String jsonBuffer;
 
 // icon set : [Clear, Clouds, Extra 1 (scattered clouds), Extra 2 (broken clouds), Drizzle, Rain, Thunderstorm, Snow, Atmosphere]
@@ -223,7 +225,7 @@ String httpGETRequest(const char* serverName)
   return payload;
 }
 
-void scroll_horizontal(uint8_t ypos, unsigned long scroll_delay, String text, uint8_t colorR, uint8_t colorG, uint8_t colorB)
+void scroll_horizontal(uint8_t ypos, unsigned long scroll_delay, String text, uint8_t colorR, uint8_t colorG, uint8_t colorB, char type)
 {
     uint16_t text_length = text.length();
     if (text_length > 250)
@@ -232,17 +234,23 @@ void scroll_horizontal(uint8_t ypos, unsigned long scroll_delay, String text, ui
     display.setTextSize(1);
     display.setRotation(0);
     display.setTextColor(display.color565(colorR, colorG, colorB));
-    display.setTextColor(display.color565(50, 255, 0));
+    
     display.fillRect(0, 14, 32, 18, display.color565(0, 0, 0));
-    display.setFont(&Picopixel);
-    display.setCursor(7, 19);
-    display.print("NEWS");
+    
+    if (type == 'N')
+    {
+      display.setFont(&Picopixel);
+      display.setTextColor(display.color565(50, 255, 0));
+      display.setCursor(7, 19);
+      display.print("NEWS");
+    }
+    
     display.drawRect(15, 1, 2, 2, display.color565(255, 255, 255));
     display.drawRect(15, 4, 2, 2, display.color565(255, 255, 255));
     
     for (int xpos = matrix_width; xpos >- (matrix_width + text_length * 5.75); xpos--)
     {  
-      display.fillRect(0, 20, 32, 12, display.color565(0, 0, 0));
+      display.fillRect(0, 22, 32, 12, display.color565(0, 0, 0));
       display.setTextColor(display.color565(colorR, colorG, colorB));
       display.setFont();
       display.setCursor(xpos, ypos);
@@ -294,7 +302,7 @@ void loop()
     }
     
     display.setFont(&Picopixel);
-    display.setTextColor(display.color565(0, 180, 255));
+    display.setTextColor(display.color565(10, 180, 225));
     display.setCursor(0, 12);
     if (day(unix_epoch) >= 10)
     {
@@ -322,13 +330,14 @@ void loop()
     {
       jsonBuffer = httpGETRequest(bigNews[timeClient.getMinutes() % 5].c_str());
       Serial.println("NEWS = " + jsonBuffer);
-      scroll_horizontal(23, 18, jsonBuffer, 0, 180, 255);
+      scroll_horizontal(23, 18, jsonBuffer, 10, 180, 225, 'N');
     }
 
     if (WiFi.status() == WL_CONNECTED)
     {
       jsonBuffer = httpGETRequest(gold22.c_str());
-      if (jsonBuffer.length() > 8 && jsonBuffer.length() < 16)
+      Serial.println(jsonBuffer);
+      if (jsonBuffer.length() > 6 && jsonBuffer.length() < 16)
       {
         Serial.println("Gold Price in Bangalore for 22 Carat / 1 gm = " + jsonBuffer);
         display.setCursor(2, 19);
@@ -336,7 +345,7 @@ void loop()
         display.print("22K GOLD");
       
         display.setTextColor(display.color565(255, 153, 51));
-        display.setCursor(6, 28);
+        display.setCursor(9, 28);
         display.print(jsonBuffer);
         display.drawLine(3, 23, 7, 23, display.color565(255, 153, 51)); // rupee up line
         display.drawLine(3, 25, 7, 25, display.color565(255, 153, 51)); // rupee mid line
@@ -368,7 +377,7 @@ void loop()
         display.setTextColor(display.color565(50, 255, 0));
         display.print("SENSEX");
         
-        display.setTextColor(display.color565(0, 180, 255));
+        display.setTextColor(display.color565(10, 180, 225));
         display.setCursor(2, 28);
         display.print(jsonBuffer);
   
